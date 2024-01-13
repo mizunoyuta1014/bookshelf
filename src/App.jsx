@@ -4,7 +4,7 @@ import './App.css'
 function App() {
 
   return (
-    <><div>書籍管理ツール</div></>
+    <><div>書籍管理ツールとなるもの</div></>
   )
 }
 
