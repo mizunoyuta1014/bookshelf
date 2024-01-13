@@ -1,0 +1,16 @@
+.titlebelt {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  height: 70px;
+  background-color: white;
+  border-bottom: 1px solid black;
+}
+
+.titlebelt .title {
+  text-decoration: none;
+  color: black;
+  text-align: left;
+  font-size: 30px;
+  font-weight: bold;
+}
