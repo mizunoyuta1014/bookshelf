@@ -1,20 +1,19 @@
 import React from "react";
+import "./Home.css";
 
 const Home = () => {
   return (
     <>
-    <div>
       <div>
-        <p className="homeguidance">サイドバーから表示したい項目を選択</p>
+        <div>
+          <p className="homeguidance">サイドバーから表示したい項目を選択</p>
+        </div>
+        <div>
+          <p>年度を選択できるように設計予定</p>
+          <p>ログイン機能も付ける</p>
+        </div>
       </div>
-      <div>
-        <p>年度を選択できるように設計予定</p>
-        <p>人増やすならログイン機能も付ける</p>
-      </div>
-    </div>
-
     </>
-
   );
 };
 

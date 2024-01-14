@@ -1,7 +1,7 @@
 nav {
-    display: flex;
-    flex-flow: column;
-    width: 20%;
-    height: 100%;
-    background-color: gray;
+  display: flex;
+  flex-flow: column;
+  width: 15%;
+  height: 100%;
+  background-color: gray;
 }
