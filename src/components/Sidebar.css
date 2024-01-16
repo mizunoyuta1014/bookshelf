@@ -1,7 +1,24 @@
 nav {
   display: flex;
   flex-flow: column;
-  width: 15%;
+  width: 200px;
   height: 100%;
-  background-color: gray;
+  background-color: white;
+  border-color: black;
+  border-right: 1px solid black;
+}
+
+nav a {
+  display: flex;
+  text-decoration: none;
+  color: black;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  height: 35px;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+nav a:hover {
+  background-color: rgb(245, 245, 245);
 }

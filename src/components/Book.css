@@ -2,15 +2,15 @@
   display: flex;
   flex-flow: column;
   justify-content: flex-start;
-  position: fixed;
+  position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: white;
   padding: 20px;
   z-index: 1000;
-  width: 20%;
-  height: 50%;
+  width: 200px;
+  height: 400px;
 }
 
 .overlay {
@@ -29,16 +29,24 @@
   text-align: center;
   align-items: center;
   margin-left: auto;
-  width: 12%;
-  height: 43%;
+  height: 25px;
   margin-top: -10px;
   margin-right: -5px;
 }
 
 .add-button {
+  margin-top: 5px;
   text-align: center;
   width: 50px;
-  height: 50px;
+  height: 32px;
+}
+
+.add-book .add-button {
+  margin-left: 5px;
+}
+
+.add-title {
+  margin-top: -10px;
 }
 
 .input-info {
@@ -48,4 +56,8 @@
 
 .add-menu-upper {
   display: flex;
+}
+
+.input-info {
+  position: relative;
 }
