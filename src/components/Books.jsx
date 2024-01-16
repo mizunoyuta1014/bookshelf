@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { IoClose } from "react-icons/io5";
 import "./Book.css";
 
 const Books = () => {
@@ -21,10 +22,12 @@ const Books = () => {
         <>
           <div className="overlay" onClick={handleCloseClick} />
           <div className="add-menu">
-            <button className="close-button" onClick={handleCloseClick}>
-              close menu
-            </button>
-            <p>追加</p>
+            <div className="add-menu-upper">
+              <p>追加</p>
+              <button className="close-button" onClick={handleCloseClick}>
+                <IoClose />
+              </button>
+            </div>
             <ul className="input-info">
               <li>
                 <div>書名</div>
