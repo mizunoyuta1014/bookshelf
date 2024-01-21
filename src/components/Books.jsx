@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { addDoc, collection, getDocs } from "firebase/firestore";
+import { auth, db } from "../firebase";
 import { IoClose } from "react-icons/io5";
 import "./Book.css";
 
@@ -9,7 +11,10 @@ const Books = () => {
   const [author, setAuthor] = useState();
   const [bookPlace, setbookPlace] = useState();
   const [category, setCategory] = useState();
-  const [priority, setPriority] = useState();
+  const [isRead, setIsRead] = useState(false);
+  const [isOwned, setIsOwned] = useState(false);
+
+  const [postList, setPostList] = useState([]);
 
   const handleAddClick = () => {
     setPopupOpen(true);
@@ -17,6 +22,8 @@ const Books = () => {
 
   const handleCloseClick = () => {
     setPopupOpen(false);
+    setIsRead(false);
+    setIsOwned(false);
   };
 
   const selectBookPlace = (e) => {
@@ -27,13 +34,66 @@ const Books = () => {
     setCategory(e.target.value);
   };
 
+  const createPost = async () => {
+    if (!bookTitle) {
+      alert("書名を入力してください。"); // 例: アラートを表示する
+      return; // これ以上の処理を行わない
+    }
+
+    await addDoc(collection(db, "booklist"), {
+      bookTitle: bookTitle || null,
+      author: author || null,
+      bookPlace: bookPlace || null,
+      category: category || null,
+      isRead: isRead,
+      isOwned: isOwned,
+    });
+    handleCloseClick();
+  };
+
+  // dbのデータを取得して表示する処理
+  // useeffectの第二引数なし：Component生成小屋やstate更新のたびに呼び出し
+  useEffect(() => {
+    const getPosts = async () => {
+      const data = await getDocs(collection(db, "booklist"));
+      // console.log(data);
+      // console.log(data.docs);
+      // console.log(data.docs.map((doc) => ({ doc })));
+      // console.log(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+      setPostList(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+    };
+    getPosts();
+  }, [isPopupOpen]);
+
+  // postListに変更があった場合にしたい処理
+  useEffect(() => {
+    console.log(postList);
+  }, [postList]);
+
   return (
     <div className="bookpage">
+      <p>2024年読書記録</p>
       <div className="add-book">
         <button onClick={handleAddClick} className="add-button">
           追加
         </button>
       </div>
+
+      {/* 表のカラムを作成 */}
+
+      {/* 取得したpostlistを表示 */}
+      {postList.map((post) => {
+        return (
+          <React.Fragment key={post.id}>
+            <div className="bookContents"></div>
+            <div className="book-name">
+              <p>{post.bookTitle}</p>
+            </div>
+          </React.Fragment>
+        );
+      })}
+
+      {/* 追加ボタンが押されたら入力フォームが出て、追加を押すとdbに送信される処理 */}
       {isPopupOpen && (
         <>
           <div className="overlay" onClick={handleCloseClick} />
@@ -47,15 +107,29 @@ const Books = () => {
             <ul className="input-info">
               <li>
                 <div>書名</div>
-                <input type="text" />
+                <input
+                  type="text"
+                  onChange={(e) => setBookTitle(e.target.value)}
+                />
               </li>
               <li>
                 <div>著者</div>
-                <input type="text" />
+                <input
+                  type="text"
+                  onChange={(e) => setAuthor(e.target.value)}
+                />
               </li>
               <li>
                 <div>保管場所</div>
-                <select name="genre" id="genre" onChange={selectBookPlace}>
+                <select
+                  name="genre"
+                  id="genre"
+                  onChange={selectBookPlace}
+                  defaultValue=""
+                >
+                  <option value="" disabled>
+                    選択してください
+                  </option>
                   <option value="home">自宅</option>
                   <option value="electron">電子書籍</option>
                   <option value="other">その他</option>
@@ -67,50 +141,47 @@ const Books = () => {
                   name="genre"
                   onChange={selectCategory}
                   id="getcategorybox"
+                  defaultValue=""
                 >
-                  <option value="programing">プログラミング</option>
-                  <option value="busines">ビジネス</option>
+                  <option value="" disabled>
+                    選択してください
+                  </option>
+                  <option value="dataanalysis">データ分析</option>
+                  <option value="dataAnalysis">インフラ</option>
+                  <option value="business">ビジネス</option>
                   <option value="Cons">コンサル</option>
                   <option value="other">その他</option>
                 </select>
-              </li>
-              <li>
-                <div>優先度</div>
-                <input type="text" />
               </li>
             </ul>
             <form className="check-box" action="#" method="post">
               <label>
                 <input
                   type="checkbox"
-                  name="checkboxName"
-                  value="checkboxValue"
+                  name="readCheckbox"
+                  value="read"
+                  checked={isRead}
+                  onChange={() => setIsRead(!isRead)}
                 />
                 読了
+              </label>
+              <label>
                 <input
                   type="checkbox"
-                  name="checkboxName"
-                  value="checkboxValue"
+                  name="ownedCheckbox"
+                  value="owned"
+                  checked={isOwned}
+                  onChange={() => setIsOwned(!isOwned)}
                 />
                 所有
               </label>
             </form>
-            <button className="add-button">追加</button>
+            <button className="add-button" onClick={createPost}>
+              追加
+            </button>
           </div>
         </>
       )}
-      <div className="book-list">
-        <ul>
-          <li>
-            <p>book1</p>
-            <button>削除</button>
-          </li>
-          <li>
-            <p>book2</p>
-            <button>削除</button>
-          </li>
-        </ul>
-      </div>
     </div>
   );
 };
