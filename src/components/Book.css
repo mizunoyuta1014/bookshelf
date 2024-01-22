@@ -1,3 +1,15 @@
+.bookpage {
+  width: 100%;
+  margin-left: 10px;
+}
+.page-title {
+  font-family: 'Arial', sans-serif;
+  font-size: 20px; 
+  font-weight: bold;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
 .add-menu {
   display: flex;
   flex-flow: column;
@@ -34,6 +46,10 @@
   margin-right: -5px;
 }
 
+.add-book{
+  margin-top: 5px;
+}
+
 .add-button {
   margin-top: 5px;
   text-align: center;
@@ -61,3 +77,45 @@
 .input-info {
   position: relative;
 }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+thead > tr {
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  text-align: left;
+  padding: 8px;
+  background-color: white;
+}
+
+th > div {
+  font-family: 'Arial', sans-serif;
+  font-size: 18px; 
+  font-weight: lighter;
+}
+
+tbody {
+  width: 100%;
+}
+
+tbody > tr {
+  margin: 5px;
+  height: 50px;
+  border-bottom: 1px solid #ddd;
+}
+
+td {
+  padding-left: 8px;
+  font-size: 16px; 
+}
+
+tr .button {
+  width: 5%;
+}
+
