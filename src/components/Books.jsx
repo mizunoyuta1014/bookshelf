@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { addDoc, collection, deleteDoc, doc, getDocs, updateDoc } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp, updateDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { IoClose } from "react-icons/io5";
 import "./Book.css";
@@ -49,6 +49,7 @@ const Books = () => {
       category: category || null,
       isRead: isRead,
       isOwned: isOwned,
+      timestamp:serverTimestamp()
     });
     handleCloseClick();
   };
@@ -57,7 +58,9 @@ const Books = () => {
   // useeffectの第二引数なし：Component生成小屋やstate更新のたびに呼び出し
   useEffect(() => {
     const getPosts = async () => {
-      const data = await getDocs(collection(db, "booklist"));
+      const booksRef = collection(db, "booklist");
+      const q = query(booksRef, orderBy("timestamp", "desc"));
+      const data = await getDocs(q);
       // console.log(data);
       // console.log(data.docs);
       // console.log(data.docs.map((doc) => ({ doc })));
@@ -168,8 +171,9 @@ const Books = () => {
             </div>
             <ul className="input-info">
               <li>
-                <div>書名</div>
+                <div >書名</div>
                 <input
+                  className="input-book-title"
                   type="text"
                   onChange={(e) => setBookTitle(e.target.value)}
                 />
@@ -177,6 +181,7 @@ const Books = () => {
               <li>
                 <div>著者</div>
                 <input
+                  className="input-author"
                   type="text"
                   onChange={(e) => setAuthor(e.target.value)}
                 />
@@ -184,6 +189,7 @@ const Books = () => {
               <li>
                 <div>保管場所</div>
                 <select
+                  className="input-place"
                   name="genre"
                   id="genre"
                   onChange={selectBookPlace}
@@ -200,6 +206,7 @@ const Books = () => {
               <li>
                 <div>カテゴリ</div>
                 <select
+                  className="input-category"
                   name="genre"
                   onChange={selectCategory}
                   id="getcategorybox"
