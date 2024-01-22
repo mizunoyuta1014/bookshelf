@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { addDoc, collection, getDocs } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDocs, updateDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { IoClose } from "react-icons/io5";
 import "./Book.css";
@@ -15,6 +15,8 @@ const Books = () => {
   const [isOwned, setIsOwned] = useState(false);
 
   const [postList, setPostList] = useState([]);
+
+  const [isDbUpdated, setIsDbUpdated] = useState(false);
 
   const handleAddClick = () => {
     setPopupOpen(true);
@@ -63,35 +65,95 @@ const Books = () => {
       setPostList(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
     };
     getPosts();
-  }, [isPopupOpen]);
+    setIsDbUpdated(false)
+  }, [isPopupOpen,isDbUpdated]);
 
-  // postListに変更があった場合にしたい処理
-  useEffect(() => {
-    console.log(postList);
-  }, [postList]);
+  const deletePost = async (id) => {
+    await deleteDoc(doc(db,"booklist",id));
+    setIsDbUpdated(true);
+  }
+
+
+  const updateOwned = async (id, isOwnedValue) => {
+    const postRef = doc(db, "booklist", id);
+    await updateDoc(postRef, {
+      isOwned: isOwnedValue
+    });
+    setIsDbUpdated(true);
+  };
+
+  const updateRead = async (id, isReadValue) => {
+    const postRef = doc(db, "booklist", id);
+    await updateDoc(postRef, {
+      isRead: isReadValue
+    });
+    setIsDbUpdated(true)
+  };
+
 
   return (
     <div className="bookpage">
-      <p>2024年読書記録</p>
+      <div className="page-title">2024年読書記録</div>
       <div className="add-book">
         <button onClick={handleAddClick} className="add-button">
           追加
         </button>
       </div>
-
-      {/* 表のカラムを作成 */}
-
-      {/* 取得したpostlistを表示 */}
-      {postList.map((post) => {
+      <table>
+        <thead>
+          <tr>
+            <th>
+              <div>書名</div>
+            </th>
+            <th>
+              <div>著者</div>
+            </th>
+            <th>
+              <div>保管場所</div>
+            </th>
+            <th>
+              <div>カテゴリ</div>
+            </th>
+            <th>
+              <div>所有</div>
+            </th>
+            <th>
+              <div>読了</div>
+            </th>
+            <th>
+              <div></div>
+            </th>
+          </tr>
+        </thead>
+         {/* 取得したpostlistを表示 */}
+        <tbody>
+        {postList.map((post) => {
         return (
           <React.Fragment key={post.id}>
-            <div className="bookContents"></div>
-            <div className="book-name">
-              <p>{post.bookTitle}</p>
-            </div>
+          <tr>
+            <td>{post.bookTitle}</td>
+            <td>{post.author}</td>
+            <td>{post.bookPlace}</td>
+            <td>{post.category}</td>
+            <td>
+              <input type="checkbox" checked={post.isOwned} onChange={(e)=>updateOwned(post.id, e.target.checked)} />
+            </td>
+            <td>
+              <input type="checkbox" checked={post.isRead} onChange={(e)=>updateRead(post.id, e.target.checked)} />
+            </td>
+            <td className="button">
+              <button className="delete-book-info" onClick={()=>alert("編集機能作成中")}>編集</button>
+            </td>
+            <td className="button">
+              <button className="delete-book-info" onClick={()=>deletePost(post.id)}>削除</button>
+            </td>
+          </tr>
+          
           </React.Fragment>
         );
       })}
+        </tbody>
+      </table>
 
       {/* 追加ボタンが押されたら入力フォームが出て、追加を押すとdbに送信される処理 */}
       {isPopupOpen && (
@@ -130,9 +192,9 @@ const Books = () => {
                   <option value="" disabled>
                     選択してください
                   </option>
-                  <option value="home">自宅</option>
-                  <option value="electron">電子書籍</option>
-                  <option value="other">その他</option>
+                  <option value="自宅">自宅</option>
+                  <option value="電子書籍">電子書籍</option>
+                  <option value="その他">その他</option>
                 </select>
               </li>
               <li>
@@ -146,11 +208,11 @@ const Books = () => {
                   <option value="" disabled>
                     選択してください
                   </option>
-                  <option value="dataanalysis">データ分析</option>
-                  <option value="dataAnalysis">インフラ</option>
-                  <option value="business">ビジネス</option>
-                  <option value="Cons">コンサル</option>
-                  <option value="other">その他</option>
+                  <option value="データ分析">データ分析</option>
+                  <option value="インフラ">インフラ</option>
+                  <option value="ビジネス">ビジネス</option>
+                  <option value="コアコン">コンサル</option>
+                  <option value="その他">その他</option>
                 </select>
               </li>
             </ul>
