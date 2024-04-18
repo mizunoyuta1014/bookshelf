@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp, updateDoc } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  orderBy,
+  query,
+  serverTimestamp,
+  updateDoc,
+} from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { IoClose } from "react-icons/io5";
 import "./Book.css";
@@ -49,7 +59,7 @@ const Books = () => {
       category: category || null,
       isRead: isRead,
       isOwned: isOwned,
-      timestamp:serverTimestamp()
+      timestamp: serverTimestamp(),
     });
     handleCloseClick();
   };
@@ -68,19 +78,18 @@ const Books = () => {
       setPostList(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
     };
     getPosts();
-    setIsDbUpdated(false)
-  }, [isPopupOpen,isDbUpdated]);
+    setIsDbUpdated(false);
+  }, [isPopupOpen, isDbUpdated]);
 
   const deletePost = async (id) => {
-    await deleteDoc(doc(db,"booklist",id));
+    await deleteDoc(doc(db, "booklist", id));
     setIsDbUpdated(true);
-  }
-
+  };
 
   const updateOwned = async (id, isOwnedValue) => {
     const postRef = doc(db, "booklist", id);
     await updateDoc(postRef, {
-      isOwned: isOwnedValue
+      isOwned: isOwnedValue,
     });
     setIsDbUpdated(true);
   };
@@ -88,15 +97,29 @@ const Books = () => {
   const updateRead = async (id, isReadValue) => {
     const postRef = doc(db, "booklist", id);
     await updateDoc(postRef, {
-      isRead: isReadValue
+      isRead: isReadValue,
     });
-    setIsDbUpdated(true)
+    setIsDbUpdated(true);
   };
 
+  const formatDate = (timestamp) => {
+    const date = timestamp.toDate();
+    const year = date.getFullYear();
+    // getMonth()は0から始まるため、1を足す
+    const month = date.getMonth() + 1;
+    // 月が1桁の場合、先頭に0を追加する
+    const formattedMonth = month < 10 ? `0${month}` : month;
+    // "2024年4月"のような形式で返す
+    return `${year}/${formattedMonth}`;
+  };
 
   return (
     <div className="bookpage">
       <div className="page-title">2024年読書記録</div>
+      <div className="total-book-display">
+        <p className="total-book-number">{postList.length}</p>
+        <p>冊/40冊</p>
+      </div>
       <div className="add-book">
         <button onClick={handleAddClick} className="add-button">
           追加
@@ -118,43 +141,63 @@ const Books = () => {
               <div>カテゴリ</div>
             </th>
             <th>
+              <div>日付</div>
+            </th>
+            <th>
               <div>所有</div>
             </th>
             <th>
               <div>読了</div>
             </th>
-            <th>
-              <div></div>
-            </th>
           </tr>
         </thead>
-         {/* 取得したpostlistを表示 */}
+
+        {/* 取得したpostlistを表示 */}
         <tbody>
-        {postList.map((post) => {
-        return (
-          <React.Fragment key={post.id}>
-          <tr>
-            <td>{post.bookTitle}</td>
-            <td>{post.author}</td>
-            <td>{post.bookPlace}</td>
-            <td>{post.category}</td>
-            <td>
-              <input type="checkbox" checked={post.isOwned} onChange={(e)=>updateOwned(post.id, e.target.checked)} />
-            </td>
-            <td>
-              <input type="checkbox" checked={post.isRead} onChange={(e)=>updateRead(post.id, e.target.checked)} />
-            </td>
-            <td className="button">
-              <button className="delete-book-info" onClick={()=>alert("編集機能作成中")}>編集</button>
-            </td>
-            <td className="button">
-              <button className="delete-book-info" onClick={()=>deletePost(post.id)}>削除</button>
-            </td>
-          </tr>
-          
-          </React.Fragment>
-        );
-      })}
+          {console.log(postList.length)}
+          {postList.map((post) => {
+            return (
+              <React.Fragment key={post.id}>
+                <tr>
+                  <td>{post.bookTitle}</td>
+                  <td>{post.author}</td>
+                  <td>{post.bookPlace}</td>
+                  <td>{post.category}</td>
+                  <td>{formatDate(post.timestamp)}</td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={post.isOwned}
+                      onChange={(e) => updateOwned(post.id, e.target.checked)}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={post.isRead}
+                      onChange={(e) => updateRead(post.id, e.target.checked)}
+                    />
+                  </td>
+                  <td className="button">
+                    <button
+                      className="delete-book-info"
+                      onClick={() => alert("編集機能作成中")}
+                    >
+                      編集
+                    </button>
+                  </td>
+                  <td className="button">
+                    <button
+                      className="delete-book-info"
+                      onClick={() => deletePost(post.id)}
+                    >
+                      削除
+                    </button>
+                  </td>
+                </tr>
+              </React.Fragment>
+            );
+          })}
         </tbody>
       </table>
 
@@ -171,7 +214,7 @@ const Books = () => {
             </div>
             <ul className="input-info">
               <li>
-                <div >書名</div>
+                <div>書名</div>
                 <input
                   className="input-book-title"
                   type="text"
