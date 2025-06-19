@@ -1,0 +1,152 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ========================================
+    // Helper Functions - セキュリティ検証用
+    // ========================================
+    
+    // ユーザー認証チェック
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // 所有者チェック
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // 年度の妥当性チェック (1900-2100年)
+    function isValidYear(year) {
+      return year is int && year >= 1900 && year <= 2100;
+    }
+    
+    // 書籍データの妥当性チェック
+    function isValidBookData(data) {
+      return data.keys().hasAll(['bookTitle', 'timestamp']) &&
+             data.bookTitle is string &&
+             data.bookTitle.size() > 0 &&
+             data.bookTitle.size() <= 500 &&
+             (data.author == null || (data.author is string && data.author.size() <= 300)) &&
+             (data.bookPlace == null || (data.bookPlace is string && data.bookPlace.size() <= 100)) &&
+             (data.category == null || (data.category is string && data.category.size() <= 100)) &&
+             (data.isRead == null || data.isRead is bool) &&
+             (data.isOwned == null || data.isOwned is bool) &&
+             (data.memo == null || (data.memo is string && data.memo.size() <= 2000)) &&
+             (data.rating == null || (data.rating is number && data.rating >= 0 && data.rating <= 5));
+    }
+    
+    // ウィッシュリストデータの妥当性チェック
+    function isValidWishlistData(data) {
+      return data.keys().hasAll(['title', 'addedAt']) &&
+             data.title is string &&
+             data.title.size() > 0 &&
+             data.title.size() <= 500 &&
+             (data.authors == null || data.authors is list) &&
+             (data.googleBooksId == null || data.googleBooksId is string) &&
+             (data.thumbnail == null || data.thumbnail is string) &&
+             (data.description == null || (data.description is string && data.description.size() <= 5000)) &&
+             (data.publishedDate == null || data.publishedDate is string);
+    }
+    
+    // プロフィールデータの妥当性チェック
+    function isValidProfileData(data) {
+      return (data.displayName == null || (data.displayName is string && data.displayName.size() <= 100)) &&
+             (data.photoURL == null || data.photoURL is string) &&
+             (data.readingGoals == null || data.readingGoals is map) &&
+             (data.preferences == null || data.preferences is map) &&
+             (data.bio == null || (data.bio is string && data.bio.size() <= 1000));
+    }
+    
+    // レート制限チェック (1分間に100リクエスト以下)
+    function isWithinRateLimit() {
+      return request.time < resource.data.lastRequest + duration.value(0, 36); // 0.6秒間隔
+    }
+    
+    // ========================================
+    // User Profile Rules
+    // ========================================
+    match /users/{userId} {
+      allow read, write: if isOwner(userId) && isValidProfileData(request.resource.data);
+      
+      // 年度別読書記録
+      match /years/{year}/books/{bookId} {
+        allow read, create: if isOwner(userId) && 
+                              isValidYear(int(year)) && 
+                              isValidBookData(request.resource.data);
+        
+        allow update: if isOwner(userId) && 
+                        isValidYear(int(year)) && 
+                        isValidBookData(request.resource.data) &&
+                        resource.data.timestamp == request.resource.data.timestamp; // タイムスタンプ変更不可
+        
+        allow delete: if isOwner(userId) && isValidYear(int(year));
+      }
+      
+      // ウィッシュリスト
+      match /wishlist/{wishId} {
+        allow read, create: if isOwner(userId) && isValidWishlistData(request.resource.data);
+        allow update: if isOwner(userId) && isValidWishlistData(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+      
+      // ユーザー設定・プリファレンス
+      match /preferences/{setting} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // アクティビティログ (読み取り専用)
+      match /activityLog/{logId} {
+        allow read: if isOwner(userId);
+        allow create: if false; // システムのみが作成可能
+      }
+    }
+    
+    // ========================================
+    // Legacy booklist collection (下位互換性)
+    // ========================================
+    match /booklist/{document} {
+      // 既存データの移行期間中のみ読み取り許可
+      allow read: if isAuthenticated();
+      // 新規作成・更新は禁止 (新構造への移行を促進)
+      allow write: if false;
+    }
+    
+    // ========================================
+    // Public Collections (統計用)
+    // ========================================
+    match /publicStats/{statId} {
+      // 匿名化された統計データのみ読み取り許可
+      allow read: if true;
+      allow write: if false; // システムのみが更新可能
+    }
+    
+    // ========================================
+    // Admin Collections
+    // ========================================
+    match /admin/{document=**} {
+      // 管理者権限を持つユーザーのみアクセス可能
+      allow read, write: if isAuthenticated() && 
+                           request.auth.token.admin == true;
+    }
+    
+    // ========================================
+    // Security Monitoring
+    // ========================================
+    match /securityLogs/{logId} {
+      // セキュリティログは読み取り専用
+      allow read: if isAuthenticated() && 
+                    request.auth.token.admin == true;
+      allow write: if false; // システムのみが記録
+    }
+    
+    // その他すべてのパスは拒否
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+// ========================================
+// Storage Rules (画像アップロード用)
+// ========================================

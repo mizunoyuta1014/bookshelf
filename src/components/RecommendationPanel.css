@@ -1,0 +1,332 @@
+.recommendation-panel {
+  background: var(--surface-color, #ffffff);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--card-shadow, 0 2px 8px rgba(0, 0, 0, 0.1));
+  border: var(--border, 1px solid #e5e7eb);
+  margin-bottom: 20px;
+}
+
+.recommendation-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.recommendation-icon {
+  font-size: 24px;
+  color: var(--primary-color, #0284c7);
+}
+
+.recommendation-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary, #1f2937);
+  flex-grow: 1;
+}
+
+.refresh-button {
+  background: none;
+  border: none;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-secondary, #6b7280);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.refresh-button:hover {
+  background-color: var(--bg-hover, #f3f4f6);
+  color: var(--primary-color, #0284c7);
+}
+
+.refresh-button svg {
+  font-size: 18px;
+}
+
+.recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.recommendation-card {
+  background: var(--card-bg, #fafafa);
+  border-radius: 10px;
+  padding: 16px;
+  border: 1px solid var(--border-light, #f0f0f0);
+  transition: all 0.2s ease;
+}
+
+.recommendation-card:hover {
+  border-color: var(--primary-color, #0284c7);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.1);
+}
+
+.book-info {
+  margin-bottom: 12px;
+}
+
+.book-title {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary, #1f2937);
+  line-height: 1.3;
+}
+
+.book-author {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: var(--text-secondary, #6b7280);
+}
+
+.book-category {
+  display: inline-block;
+  background: var(--primary-light, #dbeafe);
+  color: var(--primary-dark, #1e40af);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.recommendation-score {
+  font-size: 13px;
+  color: var(--success-color, #10b981);
+  font-weight: 500;
+}
+
+.recommendation-reasons {
+  margin-bottom: 16px;
+}
+
+.reasons-toggle {
+  background: none;
+  border: none;
+  color: var(--primary-color, #0284c7);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 0;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.reasons-toggle:hover {
+  color: var(--primary-dark, #1e40af);
+}
+
+.reasons-list {
+  margin: 8px 0 0 0;
+  padding-left: 16px;
+  list-style: none;
+}
+
+.reason-item {
+  font-size: 13px;
+  color: var(--text-secondary, #6b7280);
+  margin-bottom: 4px;
+  position: relative;
+}
+
+.reason-item::before {
+  content: "•";
+  color: var(--primary-color, #0284c7);
+  position: absolute;
+  left: -12px;
+  font-weight: bold;
+}
+
+.recommendation-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.add-to-wishlist-button {
+  background: var(--primary-color, #0284c7);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.add-to-wishlist-button:hover {
+  background: var(--primary-dark, #1e40af);
+  transform: translateY(-1px);
+}
+
+.feedback-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.feedback-button {
+  background: none;
+  border: 1px solid var(--border-light, #e5e7eb);
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-secondary, #6b7280);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feedback-button:hover:not(:disabled) {
+  background: var(--bg-hover, #f3f4f6);
+}
+
+.feedback-button.positive.active {
+  background: var(--success-light, #d1fae5);
+  border-color: var(--success-color, #10b981);
+  color: var(--success-color, #10b981);
+}
+
+.feedback-button.negative.active {
+  background: var(--error-light, #fee2e2);
+  border-color: var(--error-color, #ef4444);
+  color: var(--error-color, #ef4444);
+}
+
+.feedback-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.feedback-button svg {
+  font-size: 14px;
+}
+
+.recommendation-footer {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-light, #f0f0f0);
+}
+
+.footer-text {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-tertiary, #9ca3af);
+  text-align: center;
+}
+
+.loading {
+  opacity: 0.7;
+}
+
+.loading-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.skeleton-card {
+  background: var(--card-bg, #fafafa);
+  border-radius: 10px;
+  padding: 16px;
+  border: 1px solid var(--border-light, #f0f0f0);
+}
+
+.skeleton-line {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.skeleton-title {
+  height: 20px;
+  width: 80%;
+}
+
+.skeleton-author {
+  height: 16px;
+  width: 60%;
+}
+
+.skeleton-reason {
+  height: 14px;
+  width: 90%;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.empty {
+  text-align: center;
+}
+
+.empty-state {
+  padding: 40px 20px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: var(--text-tertiary, #9ca3af);
+  margin-bottom: 16px;
+}
+
+.empty-state p {
+  margin: 0 0 8px 0;
+  color: var(--text-secondary, #6b7280);
+}
+
+.empty-subtitle {
+  font-size: 14px;
+  color: var(--text-tertiary, #9ca3af);
+}
+
+@media (max-width: 768px) {
+  .recommendation-panel {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .recommendation-header {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
+  
+  .recommendation-header h3 {
+    font-size: 16px;
+  }
+  
+  .recommendation-card {
+    padding: 12px;
+  }
+  
+  .recommendation-actions {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+  
+  .feedback-buttons {
+    justify-content: center;
+  }
+}
