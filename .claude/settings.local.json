@@ -27,7 +27,12 @@
       "mcp__supabase__execute_sql",
       "mcp__supabase__get_advisors",
       "Bash(timeout 15s npm start)",
-      "mcp__supabase__get_project"
+      "mcp__supabase__get_project",
+      "Bash(git rm:*)",
+      "Bash(git filter-branch:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git config:*)"
     ],
     "deny": []
   }
