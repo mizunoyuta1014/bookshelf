@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useEffect, useState } from 'react';
+import { useAuth } from '../contexts/SupabaseAuthContext.jsx';
 import { useStatistics } from '../hooks/useStatistics';
-import { bookService } from '../services/bookService';
+import { supabaseService } from '../services/supabaseService';
+import { useSimpleErrorHandler } from './ErrorHandler.jsx';
+import { getErrorMessage } from '../utils/errorMessages.js';
 import BookCategoryPieChart from './Charts/PieChart';
 import MonthlyProgressChart from './Charts/LineChart';
 import ReadingProgressBars from './Charts/ProgressBar';
@@ -13,6 +15,7 @@ import './ExportButton.css';
 
 const Statistics = () => {
   const { currentUser } = useAuth();
+  const { showError } = useSimpleErrorHandler();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -28,21 +31,23 @@ const Statistics = () => {
         return;
       }
 
+      setLoading(true);
       try {
-        setLoading(true);
-        const fetchedBooks = await bookService.getBooks(currentUser.uid, selectedYear);
-        setBooks(fetchedBooks);
+        const fetchedBooks = await supabaseService.getBooks({ year: selectedYear });
+        const convertedBooks = fetchedBooks;
+        setBooks(convertedBooks);
         setError(null);
       } catch (error) {
-        console.error('統計データ取得エラー:', error);
-        setError('統計データの取得に失敗しました。');
+        const errorMessage = getErrorMessage(error, '統計データ取得');
+        setError(errorMessage);
+        showError(errorMessage, { context: '統計データ取得' });
       } finally {
         setLoading(false);
       }
     };
 
     fetchBooks();
-  }, [currentUser, selectedYear]);
+  }, [currentUser, selectedYear, showError]);
 
   const handleYearChange = (year) => {
     setSelectedYear(year);

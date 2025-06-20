@@ -10,7 +10,7 @@ export const useRecommendations = (userId, userBooks = [], options = {}) => {
   const {
     maxRecommendations = 5,
     excludeRead = true,
-    autoRefresh = true,
+    autoRefresh = false, // 自動更新を無効化（パフォーマンス改善）
     refreshInterval = 5 * 60 * 1000 // 5分
   } = options;
 

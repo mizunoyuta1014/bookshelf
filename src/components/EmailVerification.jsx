@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../contexts/SupabaseAuthContext.jsx';
 import './EmailVerification.css';
 
 const EmailVerification = () => {

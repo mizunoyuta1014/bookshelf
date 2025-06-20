@@ -192,6 +192,18 @@
   font-size: 1rem;
 }
 
+/* 強制ログアウトボタン（デバッグ用） */
+.force-logout {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+  margin-left: 0.5rem;
+  font-size: 0.7rem;
+}
+
+.force-logout:hover {
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .header-container {

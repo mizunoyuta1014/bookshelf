@@ -1,0 +1,161 @@
+/* エラーコンテナ */
+.error-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+/* エラートースト */
+.error-toast {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-bottom: 12px;
+  min-width: 320px;
+  max-width: 480px;
+  pointer-events: auto;
+  animation: slideIn 0.3s ease-out;
+  border-left: 4px solid #dc3545;
+  overflow: hidden;
+}
+
+.error-toast--network {
+  border-left-color: #fd7e14;
+}
+
+.error-toast--auth {
+  border-left-color: #e83e8c;
+}
+
+.error-toast--validation {
+  border-left-color: #ffc107;
+}
+
+.error-toast--server {
+  border-left-color: #dc3545;
+}
+
+.error-toast--unknown {
+  border-left-color: #6c757d;
+}
+
+/* トースト内容 */
+.error-toast__content {
+  display: flex;
+  align-items: flex-start;
+  padding: 16px;
+  gap: 12px;
+}
+
+.error-toast__icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.error-toast__message {
+  flex: 1;
+  min-width: 0;
+}
+
+.error-toast__text {
+  font-weight: 500;
+  color: #212529;
+  margin-bottom: 4px;
+  word-wrap: break-word;
+}
+
+.error-toast__context {
+  font-size: 0.875rem;
+  color: #6c757d;
+  word-wrap: break-word;
+}
+
+/* アクション */
+.error-toast__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.error-toast__retry,
+.error-toast__close {
+  background: none;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+
+.error-toast__retry:hover {
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+.error-toast__close:hover {
+  background-color: #f8f9fa;
+  color: #dc3545;
+}
+
+/* アニメーション */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* ダークテーマ対応 */
+[data-theme="dark"] .error-toast {
+  background: #343a40;
+  color: #f8f9fa;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .error-toast__text {
+  color: #f8f9fa;
+}
+
+[data-theme="dark"] .error-toast__context {
+  color: #adb5bd;
+}
+
+[data-theme="dark"] .error-toast__retry:hover,
+[data-theme="dark"] .error-toast__close:hover {
+  background-color: #495057;
+}
+
+[data-theme="dark"] .error-toast__retry:hover {
+  color: #f8f9fa;
+}
+
+[data-theme="dark"] .error-toast__close:hover {
+  color: #dc3545;
+}
+
+/* レスポンシブ */
+@media (max-width: 768px) {
+  .error-container {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+  }
+  
+  .error-toast {
+    min-width: unset;
+    max-width: unset;
+  }
+}

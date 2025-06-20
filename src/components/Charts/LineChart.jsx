@@ -38,7 +38,7 @@ const MonthlyProgressChart = ({ data }) => {
   return (
     <div className="chart-container">
       <h3 className="chart-title">月別読書推移</h3>
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height="100%" aspect={1.5} minHeight={250}>
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="month" />

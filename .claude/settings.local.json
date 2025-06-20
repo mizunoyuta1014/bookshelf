@@ -14,7 +14,20 @@
       "Bash(rg:*)",
       "Bash(ls:*)",
       "Bash(grep:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "mcp__supabase__list_projects",
+      "mcp__supabase__list_tables",
+      "mcp__supabase__apply_migration",
+      "Bash(rg:*)",
+      "Bash(rm:*)",
+      "Bash(curl:*)",
+      "Bash(grep:*)",
+      "Bash(npx playwright install:*)",
+      "Bash(node:*)",
+      "mcp__supabase__execute_sql",
+      "mcp__supabase__get_advisors",
+      "Bash(timeout 15s npm start)",
+      "mcp__supabase__get_project"
     ],
     "deny": []
   }

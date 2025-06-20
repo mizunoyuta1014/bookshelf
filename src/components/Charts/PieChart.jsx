@@ -31,7 +31,7 @@ const BookCategoryPieChart = ({ data }) => {
   return (
     <div className="chart-container">
       <h3 className="chart-title">カテゴリ別統計</h3>
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height="100%" aspect={1.2} minHeight={250}>
         <PieChart>
           <Pie
             data={chartData}

@@ -1,18 +1,22 @@
 import React, { useState } from "react";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../contexts/SupabaseAuthContext.jsx";
+import { useSimpleErrorHandler } from "./ErrorHandler.jsx";
+import { getErrorMessage } from "../utils/errorMessages.js";
 import "./Header.css";
 
 const Header = () => {
   const { currentUser, logout } = useAuth();
+  const { showError, withErrorHandling } = useSimpleErrorHandler();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
-    try {
+    await withErrorHandling(async () => {
+      console.log('ログアウト処理開始...');
       await logout();
-    } catch (error) {
-      console.error('ログアウトエラー:', error);
-    }
+      console.log('ログアウト処理完了');
+    }, 'ログアウト');
   };
+
 
   return (
     <header className="modern-header">
@@ -33,21 +37,21 @@ const Header = () => {
           {currentUser && (
             <div className="user-profile">
               <div className="user-avatar">
-                {currentUser.photoURL ? (
+                {(currentUser.user_metadata?.avatar_url || currentUser.photoURL) ? (
                   <img 
-                    src={currentUser.photoURL} 
-                    alt={currentUser.displayName || 'ユーザー'}
+                    src={currentUser.user_metadata?.avatar_url || currentUser.photoURL} 
+                    alt={currentUser.user_metadata?.full_name || currentUser.displayName || 'ユーザー'}
                     className="avatar-image"
                   />
                 ) : (
                   <div className="avatar-placeholder">
-                    {(currentUser.displayName || currentUser.email || 'U').charAt(0).toUpperCase()}
+                    {(currentUser.user_metadata?.full_name || currentUser.displayName || currentUser.email || 'U').charAt(0).toUpperCase()}
                   </div>
                 )}
               </div>
               <div className="user-info">
                 <span className="user-name">
-                  {currentUser.displayName || currentUser.email}
+                  {currentUser.user_metadata?.full_name || currentUser.displayName || currentUser.email}
                 </span>
                 <button className="logout-btn" onClick={handleLogout}>
                   <span className="logout-icon">🚪</span>

@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../contexts/SupabaseAuthContext.jsx';
+import { useSimpleErrorHandler } from './ErrorHandler.jsx';
+import { getErrorMessage } from '../utils/errorMessages.js';
 import PasswordReset from './PasswordReset';
 import './Login.css';
 
 const Login = () => {
   const { signInWithGoogle, error } = useAuth();
+  const { showError, withErrorHandling } = useSimpleErrorHandler();
   const [loading, setLoading] = useState(false);
   const [showPasswordReset, setShowPasswordReset] = useState(false);
 
   const handleGoogleSignIn = async () => {
-    try {
-      setLoading(true);
+    setLoading(true);
+    await withErrorHandling(async () => {
       await signInWithGoogle();
-    } catch (error) {
-      console.error('ログインエラー:', error);
-    } finally {
-      setLoading(false);
-    }
+    }, 'ログイン');
+    setLoading(false);
   };
 
   if (showPasswordReset) {

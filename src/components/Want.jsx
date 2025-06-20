@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { useAuth } from "../hooks/useAuth";
-import { bookService } from "../services/bookService";
+import { useState, useEffect } from "react";
+import { useAuth } from "../contexts/SupabaseAuthContext.jsx";
+import { supabaseService, wishlistService } from "../services/supabaseService";
+import { useSimpleErrorHandler } from "./ErrorHandler.jsx";
+import { getErrorMessage } from "../utils/errorMessages.js";
 import { IoAdd, IoTrash, IoBookmark, IoCheckmark } from "react-icons/io5";
 import "./Want.css"; // スタイルシートをインポート
 
 const Want = () => {
   const { currentUser } = useAuth();
+  const { showError, withErrorHandling } = useSimpleErrorHandler();
   const [query, setQuery] = useState("");
   const [books, setBooks] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
@@ -13,7 +16,7 @@ const Want = () => {
   const [error, setError] = useState(null);
   const [wishlist, setWishlist] = useState([]);
   const [activeTab, setActiveTab] = useState('search'); // 'search' or 'wishlist'
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedYear] = useState(new Date().getFullYear());
 
   const searchBooks = async () => {
     setIsLoading(true);
@@ -47,83 +50,79 @@ const Want = () => {
       if (!currentUser) return;
       
       try {
-        const wishlistData = await bookService.getWishlist(currentUser.uid);
+        const wishlistData = await wishlistService.getWishlist(currentUser.id);
         setWishlist(wishlistData || []);
       } catch (error) {
-        console.error("ウィッシュリスト読み込みエラー:", error);
+        const errorMessage = getErrorMessage(error, 'ウィッシュリスト読み込み');
+        showError(errorMessage, { context: 'ウィッシュリスト読み込み' });
       }
     };
 
     loadWishlist();
-  }, [currentUser]);
+  }, [currentUser, showError]);
 
   // Add book to wishlist
   const addToWishlist = async (book) => {
     if (!currentUser) {
-      alert("ログインが必要です。");
+      showError('ログインが必要です', { context: '認証' });
       return;
     }
 
-    try {
+    await withErrorHandling(async () => {
       const wishlistItem = {
         googleBooksId: book.id,
         title: book.volumeInfo.title,
         authors: book.volumeInfo.authors || [],
-        thumbnail: book.volumeInfo.imageLinks?.thumbnail || '',
+        imageUrl: book.volumeInfo.imageLinks?.thumbnail || '',
         description: book.volumeInfo.description || '',
-        publishedDate: book.volumeInfo.publishedDate || '',
-        addedAt: new Date()
+        publishedDate: book.volumeInfo.publishedDate || ''
       };
 
-      await bookService.addToWishlist(currentUser.uid, wishlistItem);
-      setWishlist(prev => [...prev, { ...wishlistItem, id: Date.now().toString() }]);
-      alert("ウィッシュリストに追加しました！");
-    } catch (error) {
-      console.error("ウィッシュリスト追加エラー:", error);
-      alert("追加に失敗しました。");
-    }
+      const addedItem = await wishlistService.addToWishlist(currentUser.id, wishlistItem);
+      setWishlist(prev => [...prev, addedItem]);
+      // 成功メッセージをコンソールに表示
+      console.log('ウィッシュリストに追加しました');
+    }, 'ウィッシュリスト追加');
   };
 
   // Remove from wishlist
   const removeFromWishlist = async (wishlistId) => {
     if (!currentUser) return;
 
-    try {
-      await bookService.removeFromWishlist(currentUser.uid, wishlistId);
+    await withErrorHandling(async () => {
+      await wishlistService.removeFromWishlist(currentUser.id, wishlistId);
       setWishlist(prev => prev.filter(item => item.id !== wishlistId));
-    } catch (error) {
-      console.error("ウィッシュリスト削除エラー:", error);
-      alert("削除に失敗しました。");
-    }
+      // 成功メッセージをコンソールに表示
+      console.log('ウィッシュリストから削除しました');
+    }, 'ウィッシュリスト削除');
   };
 
   // Move from wishlist to reading records
   const moveToReadingRecord = async (wishlistItem) => {
     if (!currentUser) return;
 
-    try {
+    await withErrorHandling(async () => {
       // Add to reading records
-      await bookService.addBook(currentUser.uid, selectedYear, {
+      await supabaseService.addBook({
         bookTitle: wishlistItem.title,
         author: wishlistItem.authors.join(', '),
         bookPlace: '未設定',
         category: '未分類',
         isRead: false,
         isOwned: false,
+        year: selectedYear
       });
 
       // Remove from wishlist
       await removeFromWishlist(wishlistItem.id);
-      alert("読書記録に移動しました！");
-    } catch (error) {
-      console.error("読書記録移動エラー:", error);
-      alert("移動に失敗しました。");
-    }
+      // 成功メッセージをコンソールに表示
+      console.log('読書記録に移動しました');
+    }, '読書記録移動');
   };
 
   // Check if book is already in wishlist
   const isInWishlist = (googleBooksId) => {
-    return wishlist.some(item => item.googleBooksId === googleBooksId);
+    return wishlist.some(item => item.google_books_id === googleBooksId);
   };
 
   return (
@@ -234,7 +233,7 @@ const Want = () => {
                 <div key={item.id} className="wishlist-item">
                   <div className="wishlist-item-image">
                     <img
-                      src={item.thumbnail}
+                      src={item.image_url}
                       alt={item.title}
                       className="book-image"
                     />

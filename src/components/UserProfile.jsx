@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/SupabaseAuthContext.jsx';
+import { useSimpleErrorHandler } from './ErrorHandler.jsx';
 import EmailVerification from './EmailVerification';
 import './UserProfile.css';
 
@@ -7,10 +8,10 @@ const UserProfile = () => {
   const { 
     currentUser, 
     updateUserPassword,
-    updateUserProfile, 
-    sendEmailVerificationToUser,
+    updateUserProfile,
     checkEmailVerification
   } = useAuth();
+  const { withErrorHandling } = useSimpleErrorHandler();
   
   const [activeTab, setActiveTab] = useState('profile');
   const [profileData, setProfileData] = useState({
@@ -41,16 +42,12 @@ const UserProfile = () => {
     setError('');
     setMessage('');
 
-    try {
+    await withErrorHandling(async () => {
       // Profile update functionality will be implemented
       // when Firebase Auth profile update methods are added to AuthContext
       setMessage('プロフィールを更新しました');
-    } catch (error) {
-      console.error('プロフィール更新エラー:', error);
-      setError('プロフィールの更新に失敗しました');
-    } finally {
-      setLoading(false);
-    }
+    }, 'プロフィール更新');
+    setLoading(false);
   };
 
   const handlePasswordUpdate = async (e) => {
@@ -70,7 +67,7 @@ const UserProfile = () => {
     setError('');
     setMessage('');
 
-    try {
+    await withErrorHandling(async () => {
       await updateUserPassword(passwordData.currentPassword, passwordData.newPassword);
       setMessage('パスワードを更新しました');
       setPasswordData({
@@ -78,22 +75,8 @@ const UserProfile = () => {
         newPassword: '',
         confirmPassword: ''
       });
-    } catch (error) {
-      console.error('パスワード更新エラー:', error);
-      
-      let errorMessage = 'パスワードの更新に失敗しました';
-      if (error.code === 'auth/wrong-password') {
-        errorMessage = '現在のパスワードが正しくありません';
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = 'パスワードが弱すぎます';
-      } else if (error.code === 'auth/requires-recent-login') {
-        errorMessage = 'セキュリティのため、再度ログインしてください';
-      }
-      
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
+    }, 'パスワード更新');
+    setLoading(false);
   };
 
   const tabs = [

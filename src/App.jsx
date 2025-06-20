@@ -1,8 +1,9 @@
 import "./App.css";
 import "./styles/design-system.css";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext.jsx";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/SupabaseAuthContext.jsx";
 import { ThemeProvider } from "./contexts/ThemeContext.jsx";
+import { ErrorProvider } from "./components/ErrorHandler.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./components/Home";
 import Want from "./components/Want";
@@ -16,21 +17,23 @@ function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
-        <Router>
-          <ProtectedRoute>
-            <ThemeToggle />
-            <Header />
-            <div className="mainarea">
-              <Sidebar />
-              <Routes>
-                <Route path="/" element={<Home />}></Route>
-                <Route path="/books" element={<Books />}></Route>
-                <Route path="/statistics" element={<Statistics />}></Route>
-                <Route path="/want" element={<Want />}></Route>
-              </Routes>
-            </div>
-          </ProtectedRoute>
-        </Router>
+        <ErrorProvider>
+          <Router>
+            <ProtectedRoute>
+              <ThemeToggle />
+              <Header />
+              <div className="mainarea">
+                <Sidebar />
+                <Routes>
+                  <Route path="/" element={<Home />}></Route>
+                  <Route path="/books" element={<Books />}></Route>
+                  <Route path="/statistics" element={<Statistics />}></Route>
+                  <Route path="/want" element={<Want />}></Route>
+                </Routes>
+              </div>
+            </ProtectedRoute>
+          </Router>
+        </ErrorProvider>
       </ThemeProvider>
     </AuthProvider>
   );

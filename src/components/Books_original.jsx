@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../contexts/SupabaseAuthContext.jsx";
 import { bookService } from "../services/bookService";
 import { useSearch } from "../hooks/useSearch";
 import SearchBar from "./SearchBar";

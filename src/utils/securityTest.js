@@ -364,11 +364,11 @@ export const setupSecurityMonitoring = () => {
   if (process.env.NODE_ENV === 'development') {
     console.log('🔍 開発環境でのセキュリティモニタリングを開始');
     
-    // 1時間ごとにセキュリティテストを実行
-    setInterval(() => {
-      console.log('⏰ 定期セキュリティチェック実行中...');
-      runAllSecurityTests();
-    }, 3600000); // 1時間 = 3,600,000ms
+    // 定期実行を無効化（パフォーマンス改善）
+    // setInterval(() => {
+    //   console.log('⏰ 定期セキュリティチェック実行中...');
+    //   runAllSecurityTests();
+    // }, 3600000); // 1時間 = 3,600,000ms
   }
 };
 

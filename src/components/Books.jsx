@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../hooks/useAuth";
-import { bookService } from "../services/bookService";
+import { useAuth } from "../contexts/SupabaseAuthContext.jsx";
+import { supabaseService } from "../services/supabaseService";
 import { useSearch } from "../hooks/useSearch";
 import { useFilter } from "../hooks/useFilter";
 import { useSort } from "../hooks/useSort";
+import { useSimpleErrorHandler } from "./ErrorHandler.jsx";
+import { getErrorMessage, getValidationError } from "../utils/errorMessages.js";
 import SearchBar from "./SearchBar";
 import FilterPanel from "./FilterPanel";
 import { IoClose } from "react-icons/io5";
@@ -19,6 +21,7 @@ import "./BookCard.css";
 
 const Books = () => {
   const { currentUser } = useAuth();
+  const { showError, withErrorHandling } = useSimpleErrorHandler();
   const [isPopupOpen, setPopupOpen] = useState(false);
   const [isEditPopupOpen, setEditPopupOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
@@ -29,6 +32,8 @@ const Books = () => {
   const [category, setCategory] = useState("");
   const [isRead, setIsRead] = useState(false);
   const [isOwned, setIsOwned] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [memo, setMemo] = useState('');
 
   const [postList, setPostList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +50,7 @@ const Books = () => {
     refreshRecommendations,
     provideFeedback,
     addToWishlist
-  } = useRecommendations(currentUser?.uid, postList, {
+  } = useRecommendations(currentUser?.id, postList, {
     maxRecommendations: 5,
     excludeRead: true
   });
@@ -90,6 +95,8 @@ const Books = () => {
     setCategory("");
     setIsRead(false);
     setIsOwned(false);
+    setRating(0);
+    setMemo('');
   };
 
   const selectBookPlace = (e) => {
@@ -101,31 +108,32 @@ const Books = () => {
   };
 
   const createPost = async () => {
-    if (!bookTitle) {
-      alert("書名を入力してください。");
+    const titleError = getValidationError('bookTitle', bookTitle);
+    if (titleError) {
+      showError(titleError, { context: '本の追加' });
       return;
     }
 
     if (!currentUser) {
-      alert("ログインが必要です。");
+      showError('ログインが必要です', { context: '認証' });
       return;
     }
 
-    try {
-      await bookService.addBook(currentUser.uid, {
+    await withErrorHandling(async () => {
+      await supabaseService.addBook({
         bookTitle: bookTitle || null,
         author: author || null,
         bookPlace: bookPlace || null,
         category: category || null,
         isRead: isRead,
         isOwned: isOwned,
-      }, selectedYear);
+        year: selectedYear,
+        rating: rating,
+        memo: memo || null
+      });
       handleCloseClick();
       setIsDbUpdated(true);
-    } catch (error) {
-      console.error("本の追加エラー:", error);
-      alert("本の追加に失敗しました。");
-    }
+    }, '本の追加');
   };
 
   // ユーザー別データを取得
@@ -136,14 +144,15 @@ const Books = () => {
         return;
       }
 
+      setLoading(true);
       try {
-        setLoading(true);
-        const books = await bookService.getBooks(currentUser.uid, selectedYear);
+        const books = await supabaseService.getBooks({ year: selectedYear });
         setPostList(books);
         setError(null);
       } catch (error) {
-        console.error("データ取得エラー:", error);
-        setError("データの取得に失敗しました。");
+        const errorMessage = getErrorMessage(error, 'データ取得');
+        setError(errorMessage);
+        showError(errorMessage, { context: 'データ取得' });
       } finally {
         setLoading(false);
       }
@@ -151,42 +160,33 @@ const Books = () => {
 
     getPosts();
     setIsDbUpdated(false);
-  }, [currentUser, selectedYear, isPopupOpen, isEditPopupOpen, isDbUpdated]);
+  }, [currentUser, selectedYear, isPopupOpen, isEditPopupOpen, isDbUpdated, showError]);
 
   const deletePost = async (id) => {
     if (!currentUser) return;
     
-    try {
-      await bookService.deleteBook(currentUser.uid, id, selectedYear);
+    await withErrorHandling(async () => {
+      await supabaseService.deleteBook(id);
       setIsDbUpdated(true);
-    } catch (error) {
-      console.error("削除エラー:", error);
-      alert("削除に失敗しました。");
-    }
+    }, '本の削除');
   };
 
   const updateOwned = async (id, isOwnedValue) => {
     if (!currentUser) return;
     
-    try {
-      await bookService.updateBook(currentUser.uid, id, { isOwned: isOwnedValue }, selectedYear);
+    await withErrorHandling(async () => {
+      await supabaseService.updateBook(id, { isOwned: isOwnedValue });
       setIsDbUpdated(true);
-    } catch (error) {
-      console.error("更新エラー:", error);
-      alert("更新に失敗しました。");
-    }
+    }, '所有状態の更新');
   };
 
   const updateRead = async (id, isReadValue) => {
     if (!currentUser) return;
     
-    try {
-      await bookService.updateBook(currentUser.uid, id, { isRead: isReadValue }, selectedYear);
+    await withErrorHandling(async () => {
+      await supabaseService.updateBook(id, { isRead: isReadValue });
       setIsDbUpdated(true);
-    } catch (error) {
-      console.error("更新エラー:", error);
-      alert("更新に失敗しました。");
-    }
+    }, '読了状態の更新');
   };
 
   const handleEditClick = (post) => {
@@ -197,40 +197,53 @@ const Books = () => {
     setCategory(post.category || "");
     setIsRead(post.isRead || false);
     setIsOwned(post.isOwned || false);
+    setRating(post.rating || 0);
+    setMemo(post.memo || '');
     setEditPopupOpen(true);
   };
 
   const updatePost = async () => {
-    if (!bookTitle) {
-      alert("書名を入力してください。");
+    const titleError = getValidationError('bookTitle', bookTitle);
+    if (titleError) {
+      showError(titleError, { context: '本の更新' });
       return;
     }
 
     if (!editingPost || !currentUser) return;
 
-    try {
-      await bookService.updateBook(currentUser.uid, editingPost.id, {
+    await withErrorHandling(async () => {
+      await supabaseService.updateBook(editingPost.id, {
         bookTitle: bookTitle || null,
         author: author || null,
         bookPlace: bookPlace || null,
         category: category || null,
         isRead: isRead,
         isOwned: isOwned,
-      }, selectedYear);
+        rating: rating,
+        memo: memo || null
+      });
       
       handleEditCloseClick();
       setIsDbUpdated(true);
-    } catch (error) {
-      console.error("更新エラー:", error);
-      alert("更新に失敗しました。");
-    }
+    }, '本の更新');
   };
 
   const formatDate = (timestamp) => {
-    if (!timestamp || !timestamp.toDate) {
+    if (!timestamp) {
       return "日付不明";
     }
-    const date = timestamp.toDate();
+    
+    let date;
+    if (typeof timestamp === 'string') {
+      // Supabase PostgreSQL timestamp
+      date = new Date(timestamp);
+    } else if (timestamp.toDate) {
+      // Firebase timestamp
+      date = timestamp.toDate();
+    } else {
+      return "日付不明";
+    }
+    
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
     const formattedMonth = month < 10 ? `0${month}` : month;
@@ -380,94 +393,192 @@ const Books = () => {
       {isPopupOpen && (
         <>
           <div className="overlay" onClick={handleCloseClick} />
-          <div className="add-menu">
-            <div className="add-menu-upper">
-              <p className="add-title">追加</p>
-              <button className="close-button" onClick={handleCloseClick}>
+          <div className="add-menu modern-modal">
+            <div className="modal-header">
+              <h2 className="modal-title">
+                <span className="modal-icon">📚</span>
+                新しい本を追加
+              </h2>
+              <button 
+                className="modal-close-btn" 
+                onClick={handleCloseClick}
+                aria-label="モーダルを閉じる"
+              >
                 <IoClose />
               </button>
             </div>
-            <ul className="input-info">
-              <li>
-                <div>書名</div>
-                <input
-                  className="input-book-title"
-                  type="text"
-                  value={bookTitle}
-                  onChange={(e) => setBookTitle(e.target.value)}
-                />
-              </li>
-              <li>
-                <div>著者</div>
-                <input
-                  className="input-author"
-                  type="text"
-                  value={author}
-                  onChange={(e) => setAuthor(e.target.value)}
-                />
-              </li>
-              <li>
-                <div>保管場所</div>
-                <select
-                  className="input-place"
-                  name="genre"
-                  id="genre"
-                  onChange={selectBookPlace}
-                  value={bookPlace}
-                >
-                  <option value="" disabled>
-                    選択してください
-                  </option>
-                  <option value="自宅">自宅</option>
-                  <option value="電子書籍">電子書籍</option>
-                  <option value="その他">その他</option>
-                </select>
-              </li>
-              <li>
-                <div>カテゴリ</div>
-                <select
-                  className="input-category"
-                  name="genre"
-                  onChange={selectCategory}
-                  id="getcategorybox"
-                  value={category}
-                >
-                  <option value="" disabled>
-                    選択してください
-                  </option>
-                  <option value="データ分析">データ分析</option>
-                  <option value="インフラ">インフラ</option>
-                  <option value="ビジネス">ビジネス</option>
-                  <option value="コアコン">コンサル</option>
-                  <option value="その他">その他</option>
-                </select>
-              </li>
-            </ul>
-            <form className="check-box" action="#" method="post">
-              <label>
-                <input
-                  type="checkbox"
-                  name="readCheckbox"
-                  value="read"
-                  checked={isRead}
-                  onChange={() => setIsRead(!isRead)}
-                />
-                読了
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  name="ownedCheckbox"
-                  value="owned"
-                  checked={isOwned}
-                  onChange={() => setIsOwned(!isOwned)}
-                />
-                所有
-              </label>
-            </form>
-            <button className="add-button" onClick={createPost}>
-              追加
-            </button>
+            
+            <div className="modal-body">
+              <form className="book-form" onSubmit={(e) => { e.preventDefault(); createPost(); }}>
+                <div className="form-section">
+                  <h3 className="section-title">基本情報</h3>
+                  
+                  <div className="form-group">
+                    <label htmlFor="book-title" className="form-label required">
+                      書名
+                    </label>
+                    <input
+                      id="book-title"
+                      className="form-input"
+                      type="text"
+                      value={bookTitle}
+                      onChange={(e) => setBookTitle(e.target.value)}
+                      placeholder="本のタイトルを入力してください"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label htmlFor="book-author" className="form-label">
+                      著者
+                    </label>
+                    <input
+                      id="book-author"
+                      className="form-input"
+                      type="text"
+                      value={author}
+                      onChange={(e) => setAuthor(e.target.value)}
+                      placeholder="著者名を入力してください"
+                    />
+                  </div>
+                  
+                  <div className="form-row">
+                    <div className="form-group half-width">
+                      <label htmlFor="book-place" className="form-label">
+                        保管場所
+                      </label>
+                      <select
+                        id="book-place"
+                        className="form-select"
+                        onChange={selectBookPlace}
+                        value={bookPlace}
+                      >
+                        <option value="">選択してください</option>
+                        <option value="自宅">🏠 自宅</option>
+                        <option value="電子書籍">📱 電子書籍</option>
+                        <option value="その他">📦 その他</option>
+                      </select>
+                    </div>
+                    
+                    <div className="form-group half-width">
+                      <label htmlFor="book-category" className="form-label">
+                        カテゴリ
+                      </label>
+                      <select
+                        id="book-category"
+                        className="form-select"
+                        onChange={selectCategory}
+                        value={category}
+                      >
+                        <option value="">選択してください</option>
+                        <option value="データ分析">📊 データ分析</option>
+                        <option value="インフラ">🔧 インフラ</option>
+                        <option value="ビジネス">💼 ビジネス</option>
+                        <option value="コンサル">🤝 コンサル</option>
+                        <option value="プログラミング">💻 プログラミング</option>
+                        <option value="小説">📖 小説</option>
+                        <option value="実用書">📝 実用書</option>
+                        <option value="その他">📚 その他</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="form-section">
+                  <h3 className="section-title">読書状況</h3>
+                  
+                  <div className="checkbox-group">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        className="checkbox-input"
+                        name="readCheckbox"
+                        checked={isRead}
+                        onChange={() => setIsRead(!isRead)}
+                      />
+                      <span className="checkbox-custom"></span>
+                      <span className="checkbox-text">
+                        <span className="status-icon">✅</span>
+                        読了済み
+                      </span>
+                    </label>
+                    
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        className="checkbox-input"
+                        name="ownedCheckbox"
+                        checked={isOwned}
+                        onChange={() => setIsOwned(!isOwned)}
+                      />
+                      <span className="checkbox-custom"></span>
+                      <span className="checkbox-text">
+                        <span className="status-icon">📖</span>
+                        所有中
+                      </span>
+                    </label>
+                  </div>
+                </div>
+                
+                <div className="form-section">
+                  <h3 className="section-title">評価・メモ</h3>
+                  
+                  <div className="form-group">
+                    <label className="form-label">
+                      評価
+                    </label>
+                    <div className="rating-group">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          className={`star-btn ${rating >= star ? 'active' : ''}`}
+                          onClick={() => setRating(rating === star ? 0 : star)}
+                          aria-label={`${star}つ星`}
+                        >
+                          ⭐
+                        </button>
+                      ))}
+                      <span className="rating-text">
+                        {rating > 0 ? `${rating}/5` : '未評価'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="form-group">
+                    <label htmlFor="book-memo" className="form-label">
+                      メモ・感想
+                    </label>
+                    <textarea
+                      id="book-memo"
+                      className="form-textarea"
+                      value={memo || ''}
+                      onChange={(e) => setMemo(e.target.value)}
+                      placeholder="この本についてのメモや感想を入力してください（任意）"
+                      rows={3}
+                    />
+                  </div>
+                </div>
+                
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={handleCloseClick}
+                  >
+                    キャンセル
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={!bookTitle.trim()}
+                  >
+                    <span className="btn-icon">📚</span>
+                    本を追加
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </>
       )}
@@ -559,6 +670,29 @@ const Books = () => {
                   onChange={() => setIsOwned(!isOwned)}
                 />
                 所有
+              </label>
+              <label>
+                評価:
+                <div className="rating-stars">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span
+                      key={star}
+                      className={`star ${star <= rating ? 'filled' : ''}`}
+                      onClick={() => setRating(star)}
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+              </label>
+              <label>
+                メモ:
+                <textarea
+                  value={memo}
+                  onChange={(e) => setMemo(e.target.value)}
+                  placeholder="本の感想やメモを入力してください"
+                  rows="3"
+                />
               </label>
             </form>
             <button className="add-button" onClick={updatePost}>

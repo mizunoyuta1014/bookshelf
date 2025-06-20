@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../contexts/SupabaseAuthContext.jsx';
 import './PasswordReset.css';
 
 const PasswordReset = ({ onBack }) => {
